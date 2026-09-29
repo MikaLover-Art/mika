@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "text": {},
+  "theme": {
+    "mode": "scroll",
+    "preset": "mika",
+    "colours": [
+      "#fcedf3",
+      "#e8f1f9",
+      "#f0e9f9",
+      "#fbe7f1"
+    ],
+    "accent": "#cf4e82"
+  },
+  "galleries": {
+    "introduction": [],
+    "hobbies": [],
+    "game": [],
+    "mika": []
+  },
+  "contacts": [],
+  "repository": {
+    "owner": "MikaLover-Art",
+    "repo": "Mika-Lover",
+    "branch": "main"
+  }
+}
