@@ -41,13 +41,22 @@
     addField(`hobby.${name}.title`, `${name}: detail heading`, 'hobbies', hobby.title);
     addField(`hobby.${name}.description`, `${name}: detail text`, 'hobbies', hobby.description, true);
   }
-  addField('love.off', 'Mika appreciation button', 'mika', 'A little love for Mika');
-  addField('love.on', 'Mika appreciation button after clicking', 'mika', 'Mika appreciation club ♡');
-  addField('love.message', 'Mika appreciation response', 'mika', 'Excellent taste. Jamm approves.');
+  addField('love.off', 'Mika appreciation button', 'mika', 'Like Mika too?');
+  addField('love.on', 'Mika appreciation button after clicking', 'mika', 'Mika fans ♡');
+  addField('love.message', 'Mika appreciation response', 'mika', 'Okay, you get it.');
   addField('page.title', 'Browser tab title', 'general', document.title);
   addField('page.description', 'Search result description', 'general', document.querySelector('meta[name="description"]').content, true);
-  for (const id of ['introduction', 'hobbies', 'game', 'mika']) addField(`gallery.${id}`, 'Photo gallery heading', id, 'Little moments, big memories.');
-  addField('contacts.heading', 'Contact section heading', 'footer', 'Find me around the internet.');
+  const galleryHeadings = { introduction: 'Around home and a day out', hobbies: 'Drawings and days out', game: 'Blue Archive, on and off my phone', mika: 'A few more Mika pictures' };
+  for (const id of Object.keys(galleryHeadings)) addField(`gallery.${id}`, 'Photo gallery heading', id, galleryHeadings[id]);
+  addField('contacts.heading', 'Contact section heading', 'footer', 'Say hi');
+  for (const [key, label, selector] of [
+    ['hobby.panel.heading', 'Hobby panel heading', '#hobby-detail > .eyebrow'],
+    ['hobby.panel.hint', 'Hobby selection hint', '#hobby-detail .detail-bottom > span:first-child'],
+  ]) {
+    const node = document.querySelector(selector).firstChild;
+    addField(key, label, 'hobbies', node.textContent.trim());
+    targets.set(key, {node, before: node.textContent.match(/^\s*/)[0], after: node.textContent.match(/\s*$/)[0]});
+  }
 
   const defaults = {
     version: 1,
@@ -55,14 +64,25 @@
     theme: { mode: 'scroll', preset: 'mika', colours: ['#fcedf3', '#e8f1f9', '#f0e9f9', '#fbe7f1'], accent: '#cf4e82' },
     galleries: { introduction: [], hobbies: [], game: [], mika: [] },
     contacts: [],
-    repository: { owner: 'MikaLover-Art', repo: 'Mika-Lover', branch: 'main' },
+    repository: { owner: 'MikaLover-Art', repo: 'mika', branch: 'main' },
   };
   let current = clone(defaults);
   const galleryNodes = {};
   for (const id of Object.keys(defaults.galleries)) {
     const block = document.createElement('div'); block.className = 'section-gallery wrap'; block.hidden = true;
-    const heading = document.createElement('h3'); const grid = document.createElement('div'); grid.className = 'photo-grid';
-    block.append(heading, grid); document.getElementById(id).append(block); galleryNodes[id] = { block, heading, grid };
+    const heading = document.createElement('h3'); heading.id = `gallery-heading-${id}`;
+    const grid = document.createElement('div'); grid.className = 'photo-grid'; grid.id = `photo-strip-${id}`; grid.tabIndex = 0; grid.setAttribute('role', 'region'); grid.setAttribute('aria-labelledby', heading.id);
+    const toolbar = document.createElement('div'); toolbar.className = 'gallery-toolbar';
+    const controls = document.createElement('div'); controls.className = 'gallery-controls';
+    const arrows = [-1, 1].map(direction => {
+      const arrow = document.createElement('button'); arrow.type = 'button'; arrow.textContent = direction < 0 ? '←' : '→'; arrow.setAttribute('aria-label', `${direction < 0 ? 'Previous' : 'Next'} photos in ${groups[id]}`); arrow.setAttribute('aria-controls', grid.id);
+      arrow.addEventListener('click', () => grid.scrollBy({left: direction * Math.max(260, grid.clientWidth * .7), behavior: document.documentElement.classList.contains('motion-off') || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}));
+      controls.append(arrow); return arrow;
+    });
+    const updateArrows = () => { arrows[0].disabled = grid.scrollLeft <= 2; arrows[1].disabled = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 2; };
+    grid.addEventListener('scroll', updateArrows, {passive: true}); new ResizeObserver(updateArrows).observe(grid);
+    grid.addEventListener('keydown', event => { if (event.target !== grid || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return; event.preventDefault(); arrows[event.key === 'ArrowLeft' ? 0 : 1].click(); });
+    toolbar.append(heading, controls); block.append(toolbar, grid); document.getElementById(id).append(block); galleryNodes[id] = { block, heading, grid, updateArrows };
   }
   const contactsBlock = document.createElement('section'); contactsBlock.className = 'contact-section'; contactsBlock.hidden = true;
   const contactsHeading = document.createElement('h3'); const contactsList = document.createElement('div'); contactsList.className = 'contact-links';
@@ -71,7 +91,13 @@
   const lightbox = document.createElement('dialog'); lightbox.className = 'photo-lightbox'; lightbox.setAttribute('aria-label', 'Photo viewer');
   const lightboxClose = document.createElement('button'); lightboxClose.type = 'button'; lightboxClose.className = 'photo-lightbox-close'; lightboxClose.textContent = 'Close photo ×';
   const lightboxImage = document.createElement('img'); const lightboxCaption = document.createElement('p');
-  lightbox.append(lightboxClose, lightboxImage, lightboxCaption); document.body.append(lightbox);
+  const lightboxStage = document.createElement('div'); lightboxStage.className = 'photo-lightbox-stage'; lightboxStage.append(lightboxImage);
+  const lightboxZoom = document.createElement('button'); lightboxZoom.type = 'button'; lightboxZoom.className = 'photo-lightbox-zoom';
+  function setZoom(zoomed) { lightboxStage.classList.toggle('is-zoomed', zoomed); lightboxZoom.textContent = zoomed ? 'Fit photo' : 'Zoom in +'; lightboxZoom.setAttribute('aria-pressed', String(zoomed)); lightboxStage.scrollTo(0, 0); }
+  lightboxZoom.addEventListener('click', () => setZoom(!lightboxStage.classList.contains('is-zoomed')));
+  lightboxImage.addEventListener('click', () => setZoom(!lightboxStage.classList.contains('is-zoomed')));
+  lightbox.addEventListener('close', () => setZoom(false)); setZoom(false);
+  lightbox.append(lightboxClose, lightboxZoom, lightboxStage, lightboxCaption); document.body.append(lightbox);
   lightboxClose.addEventListener('click', () => lightbox.close());
   lightbox.addEventListener('click', event => { if (event.target === lightbox) { const r = lightbox.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) lightbox.close(); } });
 
@@ -123,10 +149,11 @@
         const figure = document.createElement('figure'); const button = document.createElement('button'); button.type = 'button'; button.className = 'photo-open'; button.setAttribute('aria-label', `Open photo: ${photo.alt || photo.description || 'Photo from Jamm’s gallery'}`);
         const img = document.createElement('img'); img.src = photo.src; img.alt = photo.alt || photo.description || 'Photo from Jamm’s gallery'; img.loading = 'lazy'; img.decoding = 'async';
         button.append(img); figure.append(button);
-        if (photo.description) { const caption = document.createElement('figcaption'); caption.textContent = photo.description; figure.append(caption); }
-        button.addEventListener('click', () => { lightboxImage.src = photo.src; lightboxImage.alt = img.alt; lightboxCaption.textContent = photo.description; lightboxCaption.hidden = !photo.description; lightbox.showModal(); });
+        if (photo.description) { const caption = document.createElement('figcaption'); caption.id = `caption-${id}-${photo.id}`; caption.textContent = photo.description; button.setAttribute('aria-describedby', caption.id); figure.append(caption); }
+        button.addEventListener('click', () => { lightboxImage.src = photo.src; lightboxImage.alt = img.alt; lightboxCaption.textContent = photo.description; lightboxCaption.hidden = !photo.description; setZoom(false); lightbox.showModal(); });
         elements.grid.append(figure);
       });
+      requestAnimationFrame(elements.updateArrows);
     }
   }
   function renderContacts(config) {
@@ -164,7 +191,7 @@
         const response = await fetch('content.json', { cache: 'no-store' });
         if (response.ok) { apply(await response.json()); return; }
       }
-      apply(defaults);
-    } catch (_) { apply(defaults); }
+      apply(window.JammPublished || defaults);
+    } catch (_) { apply(window.JammPublished || defaults); }
   })();
 })();

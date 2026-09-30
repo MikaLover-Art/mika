@@ -1,4 +1,5 @@
-{
+/* Bundled published content for local/offline previews. Live content.json takes precedence. */
+window.JammPublished = {
   "version": 1,
   "text": {
     "gallery.introduction": "Around home and a day out",
@@ -121,4 +122,4 @@
     "repo": "mika",
     "branch": "main"
   }
-}
+};

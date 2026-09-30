@@ -1,0 +1,92 @@
+/* Mika's profile photo and rotating introduction banner. */
+.brand .brand-mark{width:44px;height:44px;flex:0 0 44px;padding:0;transform:none;border-radius:50%;overflow:hidden;background:#f8d0e1;border:2px solid #fff;box-shadow:0 0 0 1px #d688ac66,0 3px 12px #9b527820}
+.brand .brand-mark img{width:100%;height:100%;object-fit:cover;object-position:center}
+.hero.wrap{isolation:isolate;display:flex;align-items:center;min-height:690px;margin-top:25px;margin-bottom:30px;padding:55px 44px 100px;border:1px solid #ffffffb3;border-radius:30px;overflow:hidden;background:#f8d9e8;box-shadow:0 22px 70px #92597616}
+.banner-slides{position:absolute;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
+.banner-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.3s ease;background:#e9cfe3;overflow:hidden}
+.banner-slide.is-active{opacity:1}
+.banner-slide::before{content:'';position:absolute;inset:-30px;background-image:var(--banner-image);background-size:cover;background-position:center;filter:blur(24px);opacity:.5;transform:scale(1.05)}
+.banner-slide>img{position:absolute;right:0;top:0;width:62%;height:100%;object-fit:contain;object-position:right center}
+.banner-window{--banner-image:url('assets/mika-by-the-window.webp')}
+.banner-profile{--banner-image:url('assets/mika-profile-picture.webp')}
+.banner-portrait{--banner-image:url('assets/mika-portrait.webp');background:linear-gradient(120deg,#f8e5f0,#d2c5ea)}
+.banner-portrait::before{opacity:.16}
+.banner-portrait>img{right:2%;width:49%;padding:20px 0}
+.hero::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,#fbe6efb8 0%,#fbe6ef80 37%,#fbe6ef18 67%,transparent 85%)}
+.hero .hero-copy{width:58%;max-width:650px;padding:32px 32px 27px;border:1px solid #ffffffc9;border-radius:22px;background:#fff0f6e0;box-shadow:0 12px 40px #73516d12;backdrop-filter:blur(17px);color:#342c40}
+.hero .hero-copy h1{font-size:clamp(36px,4.4vw,63px);letter-spacing:-2.6px;line-height:1.15;white-space:normal;margin-bottom:25px}
+.hero .hero-copy h1 em{font-size:1.16em;color:#b53972}
+.hero .hero-copy .eyebrow{font-size:9px;letter-spacing:1.35px;margin-bottom:22px}
+.hero .hero-description{font-size:15px;line-height:1.9;color:#625266}
+.hero .hero-description strong{color:#342c40}
+.hero .hero-note{font-size:11px;color:#665467;margin-top:25px;line-height:1.5}
+.hero .hero-actions{gap:20px;flex-wrap:wrap}
+.hero .hero-actions .button{font-size:13px;padding:12px 18px;gap:14px}
+.hero .hero-actions .text-link{font-size:12px}
+.hero .hero-art{position:absolute;inset:0;width:100%;max-width:none;height:100%;margin:0;pointer-events:none;z-index:2}
+.hero-art .hero-portrait,.hero-art .art-disc,.hero-art .art-orbit,.hero-art .art-backword,.hero-art .art-coordinate,.hero-art .deco-star{display:none}
+.hero-art .favourite-label{left:auto;right:26px;top:27px;transform:rotate(3deg);background:#fff9;color:#342c40}
+.hero-art .mika-caption{right:28px;bottom:99px;transform:rotate(-3deg);padding:12px 18px;color:#342c40;background:#fff9}
+.hero .scroll-cue{left:45px;bottom:35px;color:#53435c}
+.hero .hero-page{display:none}
+.banner-controls{position:absolute;right:31px;bottom:26px;z-index:6;display:flex;align-items:center;gap:8px;padding:5px 8px;background:#ffedf6d9;border:1px solid #ffffffdb;border-radius:30px;box-shadow:0 4px 20px #68446716;backdrop-filter:blur(12px);color:#823d62}
+.banner-arrow{width:30px;height:30px;padding:0;display:grid;place-items:center;background:none;border-radius:50%;font-size:28px;line-height:1;transition:background .2s}
+.banner-arrow:hover{background:#eec3d6}
+.banner-dots{display:flex;gap:1px;align-items:center}
+.banner-dot{display:grid;place-items:center;width:23px;height:30px;padding:0;background:none;border-radius:20px}
+.banner-dot::before{content:'';width:6px;height:6px;border-radius:20px;background:#aa739488;transition:width .3s,background .3s}
+.banner-dot[aria-pressed=true]::before{width:18px;background:#ad3d74}
+.motion-off .banner-slide,.motion-off .banner-dot::before{transition:none}
+.theme-dark .hero .hero-copy{background:#33233deb;border-color:#c598b55e;color:#fff0f9}
+.theme-dark .hero .hero-description,.theme-dark .hero .hero-note{color:#e0cddd}
+.theme-dark .hero .hero-description strong{color:#fff0f9}
+.theme-dark .hero .hero-copy h1 em{color:#f3a8ce}
+.theme-dark .hero::after{background:linear-gradient(90deg,#271d3499,transparent 80%)}
+.theme-dark .hero .scroll-cue{color:#fff0f9;text-shadow:0 1px 4px #281c38}
+@media(max-width:1000px){
+  .hero.wrap{min-height:670px;padding:36px 28px 100px}
+  .hero .hero-copy{width:62%;padding:26px 25px}
+  .hero .hero-copy h1{font-size:46px;letter-spacing:-2px}
+  .hero .hero-description br:first-of-type{display:none}
+  .hero-art .mika-caption{right:20px;bottom:100px;padding:11px 15px}
+  .hero-art .favourite-label{right:18px;top:19px;font-size:8px;padding:10px 12px}
+  .hero .scroll-cue{left:29px}
+}
+@media(max-width:760px){
+  .hero.wrap{width:calc(100% - 40px);padding:32px 22px 92px}
+  .hero .hero-copy{width:67%;padding:24px 22px}
+  .hero .hero-copy h1{font-size:40px}
+  .hero .hero-description{font-size:14px}
+  .hero-art .favourite-label{display:none}
+  .hero-art .mika-caption{right:15px;bottom:100px;padding:10px 13px}
+  .hero-art .mika-caption b{font-size:15px}
+  .hero-art .mika-caption div>span{font-size:7px}
+  .hero-art .caption-star{font-size:25px}
+  .hero .hero-copy .eyebrow{font-size:8px;letter-spacing:.8px}
+}
+@media(max-width:620px){
+  .brand .brand-mark{width:40px;height:40px;flex-basis:40px}
+  .hero.wrap{display:block;min-height:0;margin-top:18px;margin-bottom:20px;padding:285px 14px 78px;border-radius:23px}
+  .banner-slides{height:365px;bottom:auto}
+  .banner-slide>img{width:100%;object-position:center 42%;object-fit:contain}
+  .banner-window>img{object-fit:cover;object-position:center 64%}
+  .banner-profile>img{object-fit:cover;object-position:center 40%}
+  .banner-portrait>img{right:0;width:100%;padding:8px 0;object-position:center top}
+  .hero::after{background:linear-gradient(180deg,transparent 200px,#f8e0ec 367px,#f8e0ec 100%)}
+  .hero .hero-copy{width:100%;max-width:none;padding:25px 22px 22px;border-radius:18px;background:#fff0f6ed}
+  .hero .hero-copy h1{font-size:clamp(31px,8.4vw,46px);letter-spacing:-1.5px;line-height:1.17;margin-bottom:21px}
+  .hero .hero-copy .eyebrow{font-size:8px;letter-spacing:.65px;gap:7px;margin-bottom:19px}
+  .hero .tiny-line{width:16px;flex-shrink:0}
+  .hero .hero-description{font-size:14px;line-height:1.8;margin-bottom:23px}
+  .hero .hero-note{font-size:10px;margin-top:20px}
+  .hero .hero-actions{gap:17px 20px}
+  .hero .hero-actions .button{font-size:12px;min-height:45px;padding:11px 15px}
+  .hero .hero-actions .text-link{font-size:12px}
+  .hero-art .mika-caption{right:20px;top:225px;bottom:auto;transform:rotate(-3deg);padding:10px 13px}
+  .hero .scroll-cue{left:25px;bottom:27px;font-size:8px;letter-spacing:.8px}
+  .banner-controls{right:15px;top:15px;bottom:auto;padding:4px 6px;gap:3px}
+  .banner-arrow{width:29px;height:29px}
+  .banner-dot{width:22px;height:29px}
+  .theme-dark .hero::after{background:linear-gradient(180deg,transparent 210px,#34223e 370px,#34223e 100%)}
+}
+@media(prefers-reduced-motion:reduce){.banner-slide,.banner-dot::before{transition:none}}

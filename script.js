@@ -6,6 +6,7 @@
   let savedMotion = null;
   try { savedMotion = localStorage.getItem('jamm-motion'); } catch (_) { /* Device preferences remain optional. */ }
   let motionEnabled = savedMotion === null ? !media.matches : savedMotion === 'on' && !media.matches;
+  let updateBannerMotion = null;
 
   function applyMotion() {
     root.classList.toggle('motion-off', !motionEnabled);
@@ -15,6 +16,7 @@
     motionButton.setAttribute('aria-label', `Animations ${motionEnabled ? 'enabled. Turn off' : 'disabled. Turn on'} animations`);
     motionButton.title = `Turn ${motionEnabled ? 'off' : 'on'} animations`;
     motionButton.querySelector('b').textContent = motionEnabled ? 'on' : 'off';
+    updateBannerMotion?.();
   }
   applyMotion();
   motionButton.addEventListener('click', () => {
@@ -23,6 +25,40 @@
     applyMotion();
   });
   media.addEventListener('change', event => { motionEnabled = !event.matches; applyMotion(); });
+
+  const banner = document.querySelector('.hero');
+  const bannerSlides = [...document.querySelectorAll('.banner-slide')];
+  const bannerDots = [...document.querySelectorAll('.banner-dot')];
+  let bannerIndex = 0;
+  let bannerTimer = 0;
+  let bannerHovered = false;
+  let bannerFocused = false;
+  function showBanner(index) {
+    bannerIndex = (index + bannerSlides.length) % bannerSlides.length;
+    bannerSlides.forEach((slide, i) => slide.classList.toggle('is-active', i === bannerIndex));
+    bannerDots.forEach((dot, i) => dot.setAttribute('aria-pressed', String(i === bannerIndex)));
+    updateBannerMotion();
+  }
+  updateBannerMotion = () => {
+    window.clearTimeout(bannerTimer);
+    if (!motionEnabled || media.matches || document.hidden || bannerHovered || bannerFocused || bannerSlides.length < 2) return;
+    bannerTimer = window.setTimeout(() => showBanner(bannerIndex + 1), 6500);
+  };
+  bannerDots.forEach((dot, index) => dot.addEventListener('click', () => showBanner(index)));
+  document.querySelectorAll('[data-banner-step]').forEach(button => {
+    button.addEventListener('click', () => showBanner(bannerIndex + Number(button.dataset.bannerStep)));
+  });
+  banner.addEventListener('pointerenter', event => {
+    if (event.pointerType === 'mouse') { bannerHovered = true; updateBannerMotion(); }
+  });
+  banner.addEventListener('pointerleave', () => { bannerHovered = false; updateBannerMotion(); });
+  banner.addEventListener('focusin', () => { bannerFocused = true; updateBannerMotion(); });
+  banner.addEventListener('focusout', event => {
+    bannerFocused = !!event.relatedTarget && banner.contains(event.relatedTarget);
+    updateBannerMotion();
+  });
+  document.addEventListener('visibilitychange', updateBannerMotion);
+  updateBannerMotion();
 
   const sections = [...document.querySelectorAll('.page-section')];
   const navLinks = [...document.querySelectorAll('.nav-link')];
@@ -78,11 +114,11 @@
   } else document.querySelectorAll('.reveal').forEach(element => element.classList.add('is-visible'));
 
   const facts = [
-    'I prefer “Jamm” over my first name. It just feels more like me.',
-    'Seeing an orangutan for the first time was definitely a moment to remember!',
-    'A quiet place in nature and a little happiness are enough for me.',
-    'I enjoy making people laugh—even when my jokes deserve an eye roll.',
-    'My favourite Blue Archive character? Mika. That probably wasn’t a surprise.',
+    'I’d rather be called Jamm than Earl James.',
+    'I still remember my first time seeing an orangutan.',
+    'I’m happy in a quiet place outside.',
+    'I like joking around and making people laugh.',
+    'My favourite Blue Archive character is Mika. You probably guessed that.',
   ];
   let factIndex = 0;
   document.querySelector('#next-fact').addEventListener('click', () => {
@@ -91,12 +127,12 @@
   });
 
   const hobbies = {
-    games: { kicker: 'LET’S PLAY', title: 'A different world, one game away.', description: 'I enjoy getting into a good game whenever I have some free time. Blue Archive has a special place on my favourites list.' },
-    movies: { kicker: 'TIME TO UNWIND', title: 'A little movie break.', description: 'When I have some time to spare, I like watching a movie. Sometimes it’s nice to settle in and enjoy a story.' },
-    drawing: { kicker: 'MAKE SOMETHING', title: 'Curiosity, meet a blank page.', description: 'Drawing is one of the things I like to try. I don’t need to have it all figured out—the fun is in giving it a go.' },
-    swimming: { kicker: 'DIVE INTO SOMETHING', title: 'A splash of something different.', description: 'Swimming is another experience I enjoy. I like trying different activities and seeing what makes a day more fun.' },
-    sports: { kicker: 'GET MOVING', title: 'A game beyond the screen.', description: 'Soccer, or another sport—I’m happy to get moving and have some fun. My hobbies don’t have to fit into just one category.' },
-    nature: { kicker: 'OUT OF THE ORDINARY', title: 'The scenic route sounds good.', description: 'I love going outside, exploring new places, and experiencing things for the first time—like seeing an orangutan. A quiet spot in nature is my kind of happiness.' },
+    games: { kicker: 'GAMING', title: 'I like a good game.', description: 'I spend some of my free time playing games. Blue Archive is one of my favourites, if the website didn’t give that away.' },
+    movies: { kicker: 'MOVIES', title: 'Sometimes I’ll put on a movie.', description: 'When I have some spare time, I like watching movies too.' },
+    drawing: { kicker: 'DRAWING', title: 'I draw sometimes.', description: 'Drawing is one of the things I enjoy trying. I don’t really stick to one hobby.' },
+    swimming: { kicker: 'SWIMMING', title: 'I like swimming too.', description: 'Swimming is another activity I enjoy. I’m usually happy to try something different.' },
+    sports: { kicker: 'SOCCER & SPORTS', title: 'It’s fun to play outside.', description: 'I like soccer and trying other sports. I’m mostly there to have fun.' },
+    nature: { kicker: 'EXPLORING', title: 'I like getting out of the house.', description: 'I love going outside and seeing new things. My first time seeing an orangutan was one of those moments. I like quiet places in nature too.' },
   };
   const hobbyButtons = [...document.querySelectorAll('.hobby-card')];
   hobbyButtons.forEach((button, index) => button.addEventListener('click', () => {
@@ -108,7 +144,7 @@
     document.querySelector('#hobby-count').textContent = `${String(index + 1).padStart(2, '0')} / 06`;
   }));
 
-  let loveMessages = {off: 'A little love for Mika', on: 'Mika appreciation club ♡', message: 'Excellent taste. Jamm approves.'};
+  let loveMessages = {off: 'Like Mika too?', on: 'Mika fans ♡', message: 'Okay, you get it.'};
   const loveButton = document.querySelector('#love-button');
   loveButton.addEventListener('click', () => {
     const loved = loveButton.getAttribute('aria-pressed') !== 'true';

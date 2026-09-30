@@ -23,4 +23,6 @@ No permissive license for the game artwork has been verified. Attribution does n
 
 - DM Sans and Manrope are served by Google Fonts, with local system fallbacks.
 - Earl James / Jamm supplied the personal introduction; the copy has been paraphrased and grammar corrected.
-- No personal photos or previous reference websites were available in the supplied project folder when this version was built. The site does not present stock images as Jamm’s personal photos.
+- Jamm supplied the photos, drawings, game screenshots, and Mika pictures in the `Jelgum web` folder. Captions are based on his filenames and introduction.
+- His photos and drawings remain his work. Blue Archive screenshots and character art belong to their respective rights holders. The original artists for the supplied Mika profile picture and window illustration were not identified in the supplied files; no authorship is claimed here.
+- Images have been resized for the website. The original files are unchanged.

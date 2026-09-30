@@ -396,7 +396,7 @@
     body.append(security);
     const repository = config.repository;
     body.append(field('GitHub account or organisation', input(repository.owner, value => { repository.owner = value.trim(); update(); }, { placeholder: 'Your GitHub username', maxLength: 100 })));
-    body.append(field('Repository name', input(repository.repo, value => { repository.repo = value.trim(); update(); }, { placeholder: 'Mika-Lover', maxLength: 100 })));
+    body.append(field('Repository name', input(repository.repo, value => { repository.repo = value.trim(); update(); }, { placeholder: 'mika', maxLength: 100 })));
     body.append(field('Branch (optional)', input(repository.branch, value => { repository.branch = value.trim(); update(); }, { placeholder: 'Use the repository’s default branch', maxLength: 200 })));
     const instructions = el('ol', 'ja-instructions');
     const first = el('li', '', 'Create a fine-grained personal access token in ');
