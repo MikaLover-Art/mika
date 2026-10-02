@@ -93,3 +93,21 @@ select.ja-input{padding-right:26px}
 .theme-dark .ja-panel,.theme-dark .ja-unlock{background:var(--ja-paper);color:var(--ja-ink)}
 .theme-dark .ja-panel p,.theme-dark .ja-unlock p{color:var(--ja-muted)}
 .theme-dark .ja-panel .ja-notice.is-error{color:#a4233a}
+/* Copy-and-paste publishing and optional section notes. */
+.ja-extra-notes{margin-top:28px;padding-top:24px;border-top:1px solid var(--ja-line)}
+.ja-note-card{border:1px solid var(--ja-line);border-radius:12px;background:#fff;padding:16px;margin:16px 0}
+.ja-note-card>.ja-eyebrow{display:block;margin-bottom:14px}
+.ja-note-card .ja-field{margin-bottom:13px}
+.ja-publish-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
+.ja-publish-actions>.ja-primary{grid-column:1/-1}
+.ja-publish-actions a[aria-disabled=true]{opacity:.5;cursor:default;pointer-events:none}
+.ja-publish-steps{padding-left:24px;margin:22px 0}
+.ja-publish-steps li{padding-left:5px;margin:12px 0}
+.ja-publish-details{border:1px solid var(--ja-line);border-radius:11px;background:#fff;padding:0 14px;margin-top:17px;min-width:0}
+.ja-publish-details>summary{padding:14px 0;cursor:pointer;font-size:12px;font-weight:700;color:var(--ja-ink)}
+.ja-publish-details[open]{padding-bottom:16px}
+.ja-publish-details>.ja-field:last-child{margin-bottom:0}
+.ja-json-output{font-family:ui-monospace,SFMono-Regular,Consolas,monospace!important;font-size:11px!important;line-height:1.6;white-space:pre;overflow:auto;tab-size:2;min-height:175px}
+.ja-publish-advanced{background:#faf5f8}
+.ja-publish-advanced .ja-instructions{margin-top:3px}
+@media(max-width:400px){.ja-publish-actions{grid-template-columns:1fr}.ja-note-card{padding:12px}.ja-publish-details{padding-left:11px;padding-right:11px}}

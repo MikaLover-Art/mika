@@ -63,10 +63,17 @@
     text,
     theme: { mode: 'scroll', preset: 'mika', colours: ['#fcedf3', '#e8f1f9', '#f0e9f9', '#fbe7f1'], accent: '#cf4e82' },
     galleries: { introduction: [], hobbies: [], game: [], mika: [] },
+    notes: { introduction: [], hobbies: [], game: [], mika: [] },
     contacts: [],
     repository: { owner: 'MikaLover-Art', repo: 'mika', branch: 'main' },
   };
   let current = clone(defaults);
+  const noteNodes = {};
+  for (const id of Object.keys(defaults.notes)) {
+    const block = document.createElement('div');
+    block.className = 'section-notes wrap'; block.hidden = true;
+    document.getElementById(id).append(block); noteNodes[id] = block;
+  }
   const galleryNodes = {};
   for (const id of Object.keys(defaults.galleries)) {
     const block = document.createElement('div'); block.className = 'section-gallery wrap'; block.hidden = true;
@@ -123,6 +130,13 @@
     result.theme.preset = ['mika', 'sky', 'lilac', 'midnight'].includes(theme.preset) ? theme.preset : 'mika';
     if (Array.isArray(theme.colours) && theme.colours.length === 4 && theme.colours.every(validHex)) result.theme.colours = [...theme.colours];
     if (validHex(theme.accent)) result.theme.accent = theme.accent;
+    for (const id of Object.keys(defaults.notes)) {
+      if (!Array.isArray(input.notes?.[id])) continue;
+      result.notes[id] = input.notes[id].slice(0, 20).filter(note => note && typeof note === 'object').map((note, i) => ({
+        id: string(note.id, `${id}-note-${i}`, 100).replace(/[^a-zA-Z0-9_-]/g, '') || `${id}-note-${i}`,
+        title: string(note.title, '', 200), body: string(note.body, '', 12000),
+      }));
+    }
     let totalData = 0;
     for (const id of Object.keys(defaults.galleries)) {
       const photos = input.galleries?.[id];
@@ -167,10 +181,28 @@
     });
     contactsBlock.hidden = contactsList.children.length === 0;
   }
+  function renderNotes(config) {
+    for (const [id, block] of Object.entries(noteNodes)) {
+      block.replaceChildren();
+      for (const note of config.notes[id]) {
+        if (!note.title.trim() && !note.body.trim()) continue;
+        const article = document.createElement('article'); article.className = 'section-note';
+        if (note.title.trim()) {
+          const title = document.createElement('h3'); title.textContent = note.title; article.append(title);
+        }
+        if (note.body.trim()) {
+          const paragraph = document.createElement('p'); paragraph.textContent = note.body; article.append(paragraph);
+        }
+        block.append(article);
+      }
+      block.hidden = block.children.length === 0;
+    }
+  }
   function apply(input) {
     const next = normalise(input);
     const imagesChanged = JSON.stringify(next.galleries) !== JSON.stringify(current.galleries);
     const contactsChanged = JSON.stringify(next.contacts) !== JSON.stringify(current.contacts);
+    const notesChanged = JSON.stringify(next.notes) !== JSON.stringify(current.notes);
     for (const [key, target] of targets) target.node.textContent = target.before + next.text[key] + target.after;
     document.title = next.text['page.title']; document.querySelector('meta[name="description"]').content = next.text['page.description'];
     const hobbies = {};
@@ -180,6 +212,7 @@
     if (imagesChanged) renderGalleries(next);
     else for (const [id, elements] of Object.entries(galleryNodes)) elements.heading.textContent = next.text[`gallery.${id}`];
     if (contactsChanged) renderContacts(next); else contactsHeading.textContent = next.text['contacts.heading'];
+    if (notesChanged) renderNotes(next);
     current = next;
     window.dispatchEvent(new Event('resize'));
     return clone(current);

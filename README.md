@@ -38,10 +38,10 @@ No build step or package installation is required. All paths are relative, inclu
 
 ## Hidden editor
 
-1. Click the **Jamm logo 10 times**.
+1. Click the **circular Mika logo 10 times**.
 2. Enter **↑ ↑ ↓ ↓ ← → ← → B A B A** using the keyboard or on-screen controls. Letters are case-insensitive.
 3. Edit text in **Sections**, add multiple images and optional captions in **Photos**, change the background in **Theme**, or manage footer links and custom icons in **Contacts**.
-4. **Preview page** collapses the editor. **Save draft** keeps work in this browser. Clicking the Jamm logo again saves the draft, exits admin mode, and returns to the published version. Reopening the editor restores the draft.
+4. **Preview page** collapses the editor. **Save draft** keeps work in this browser. Clicking the Mika logo again saves the draft, exits admin mode, and returns to the published version. Reopening the editor restores the draft.
 
 Photo galleries accept PNG, JPG, WebP and GIF, up to 6 MB per photo and 100 photos per section. Contact icons allow up to 1 MB; up to 30 links are supported. Draft and backup JSON are limited to 30 MB, including encoded images. Captions are optional; add image descriptions for accessibility. Galleries are hidden until photos are added. Photos sit in horizontal strips with arrow controls, keyboard navigation and touch scrolling. Captions appear on hover or focus, and remain visible on phones. Clicking opens the photo viewer, which includes a zoom control.
 
@@ -49,9 +49,19 @@ Photo galleries accept PNG, JPG, WebP and GIF, up to 6 MB per photo and 100 phot
 
 The secret sequence hides the editing interface. It is not authentication: visitors cannot publish without GitHub authorisation.
 
-In **Publish**, the account and repository are already configured. Your friend can create a fine-grained GitHub personal access token limited to this repository with **Contents: Read and write**, then enter it in the editor’s password field. The token is held only in memory, never stored in drafts, backups, or the repository, and cleared after publishing or leaving the Publish tab.
+In **Sections**, choose a section to edit its headings, paragraphs, button labels and other text. Use **Add text block** to add extra information to any of the four main sections, with an optional heading. Blocks can be reordered or removed.
 
-Publishing uploads new image assets and `content.json` in a commit, preserving existing repository files. GitHub Pages then deploys the updated content. The initial website files must already be in the repository before this works. Branch protection may require a different publishing workflow.
+To publish with the same copy-and-paste workflow as the NutcrackerPro portfolio:
+
+1. Open **Publish** and choose **Copy for GitHub**.
+2. Choose **Open GitHub editor**. This opens `content.json` in the **MikaLover-Art/mika** repository.
+3. Select all the existing file text, paste the copied code, and choose **Commit changes**. GitHub Pages will update after its deployment finishes.
+
+The code includes every editable text field, extra text blocks, colours, photo captions, contacts, and newly uploaded photos/icons. Existing website images keep their current asset paths. You only need to replace `content.json`; no access token is required for this workflow. Copying or saving a draft does not publish anything.
+
+You can also choose **Download content.json** and upload that file to the repository, replacing the existing file. This is useful if a large photo collection is difficult to paste into GitHub's editor.
+
+Optional direct publishing remains available under **Advanced**. It uses a fine-grained GitHub token limited to this repository with **Contents: Read and write**. The token stays in memory, is excluded from exports and backups, and is cleared after publishing or leaving the Publish tab. Direct publishing saves images as separate assets and updates `content.json` in one commit.
 
 **Download backup** exports a portable JSON copy, including photos and icons. **Import backup** restores it into the local preview. Back up before changing devices or clearing browser data. Browser drafts are private to that browser; publishing makes the selected photos and contacts public.
 

@@ -1,4 +1,4 @@
-/* Bundled published content for local/offline previews. Live content.json takes precedence. */
+/* Published content for local file previews. The hosted website reads content.json. */
 window.JammPublished = {
   "version": 1,
   "text": {
@@ -121,5 +121,11 @@ window.JammPublished = {
     "owner": "MikaLover-Art",
     "repo": "mika",
     "branch": "main"
+  },
+  "notes": {
+    "introduction": [],
+    "hobbies": [],
+    "game": [],
+    "mika": []
   }
 };

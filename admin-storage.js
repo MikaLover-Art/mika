@@ -332,6 +332,37 @@
     }
   }
 
+  function serializeContent(config) {
+    const content = copyConfig(config);
+    if (content.version !== 1 || !content.text || !content.galleries) {
+      throw new Error('The portfolio content is incomplete. Reload the editor and try again.');
+    }
+    return JSON.stringify(content, null, 2) + '\n';
+  }
+
+  function githubEditorURL(repository = {}) {
+    const owner = String(repository.owner || '').trim();
+    const repo = String(repository.repo || '').trim();
+    const branch = String(repository.branch || 'main').trim() || 'main';
+    validateRepository(owner, repo);
+    validateBranch(branch);
+    return `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/edit/${encodeURIComponent(branch)}/content.json`;
+  }
+
+  function downloadContent(config) {
+    const blob = new Blob([serializeContent(config)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'content.json';
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return blob;
+  }
+
   async function exportBackup(config) {
     const backup = copyConfig(config);
     for (const field of imageFields(backup)) field.object[field.key] = await imageAsDataUrl(field.object[field.key]);
@@ -348,5 +379,5 @@
     return blob;
   }
 
-  window.JammStorage = Object.freeze({ loadDraft, saveDraft, clearDraft, publish, exportBackup });
+  window.JammStorage = Object.freeze({ loadDraft, saveDraft, clearDraft, publish, exportBackup, serializeContent, githubEditorURL, downloadContent });
 })();

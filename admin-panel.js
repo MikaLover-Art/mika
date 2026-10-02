@@ -119,7 +119,7 @@
   }
   function trap(event, container) {
     if (event.key !== 'Tab') return;
-    const nodes = [...container.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex="0"]')].filter(node => node.getClientRects().length);
+    const nodes = [...container.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], summary, [tabindex="0"]')].filter(node => node.getClientRects().length);
     if (!nodes.length) return;
     const first = nodes[0], last = nodes[nodes.length - 1];
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
@@ -301,6 +301,37 @@
       const control = input(config.text[item.key], value => { config.text[item.key] = value; update(); }, { multiline: item.multiline, maxLength: item.multiline ? 12000 : 1000 });
       body.append(field(item.label, control));
     });
+    const section = Object.keys(SECTIONS).find(key => SECTIONS[key] === fieldGroup);
+    if (!section) return;
+    if (!config.notes) config.notes = Object.fromEntries(Object.keys(SECTIONS).map(key => [key, []]));
+    if (!Array.isArray(config.notes[section])) config.notes[section] = [];
+    const notes = config.notes[section];
+    const extra = el('section', 'ja-extra-notes');
+    extra.append(heading('Extra text', 'Add another thought or story below this section. Each block can have a heading, a paragraph, or both.'));
+    if (!notes.length) extra.append(hint('No extra text blocks yet.'));
+    notes.forEach((note, index) => {
+      const card = el('article', 'ja-note-card');
+      card.append(el('span', 'ja-eyebrow', `TEXT BLOCK ${index + 1}`));
+      card.append(field(`Block ${index + 1} heading (optional)`, input(note.title, value => { note.title = value; update(); }, { maxLength: 200 })));
+      card.append(field(`Block ${index + 1} text`, input(note.body, value => { note.body = value; update(); }, { multiline: true, rows: 5, maxLength: 12000 })));
+      const actions = el('div', 'ja-item-actions');
+      const up = button('↑ Move up', () => { [notes[index - 1], notes[index]] = [notes[index], notes[index - 1]]; update(); render('sections'); });
+      up.disabled = index === 0;
+      const down = button('↓ Move down', () => { [notes[index + 1], notes[index]] = [notes[index], notes[index + 1]]; update(); render('sections'); });
+      down.disabled = index === notes.length - 1;
+      const remove = button('Remove', () => { notes.splice(index, 1); update(); render('sections'); status('Text block removed from the draft.'); }, 'ja-button ja-danger');
+      actions.append(up, down, remove); card.append(actions); extra.append(card);
+    });
+    const add = button('+ Add text block', () => {
+      notes.push({ id: uid(), title: '', body: '' });
+      update(); render('sections');
+      const cards = body.querySelectorAll('.ja-note-card');
+      cards[cards.length - 1]?.querySelector('input')?.focus();
+    }, 'ja-button ja-wide');
+    add.disabled = notes.length >= 20;
+    extra.append(add);
+    if (add.disabled) extra.append(hint('Each section can hold up to 20 extra text blocks.'));
+    body.append(extra);
   }
   function renderPhotos() {
     body.append(heading('A few favourite moments.', 'Add several photos at once. Captions are optional; image descriptions help people using screen readers.'));
@@ -390,32 +421,105 @@
     if (addContact.disabled) body.append(hint('You have reached the limit of 30 contact links.'));
   }
   function renderPublish() {
-    body.append(heading('Ready for the world?', 'Publish your text, photos, colours and contacts to your GitHub repository. Your Pages site will update after its deployment finishes.'));
-    const security = el('div', 'ja-callout');
-    security.append(el('strong', '', 'Your sequence hides the editor.'), el('p', '', 'Publishing requires permission to your GitHub repository. The access sequence does not protect the public website or authorize changes.'));
-    body.append(security);
-    const repository = config.repository;
-    body.append(field('GitHub account or organisation', input(repository.owner, value => { repository.owner = value.trim(); update(); }, { placeholder: 'Your GitHub username', maxLength: 100 })));
-    body.append(field('Repository name', input(repository.repo, value => { repository.repo = value.trim(); update(); }, { placeholder: 'mika', maxLength: 100 })));
-    body.append(field('Branch (optional)', input(repository.branch, value => { repository.branch = value.trim(); update(); }, { placeholder: 'Use the repository’s default branch', maxLength: 200 })));
-    const instructions = el('ol', 'ja-instructions');
+    body.append(heading('Update your website', 'Copy your changes into GitHub, then commit them. You can use your normal GitHub sign-in; no access token is needed.'));
+    let repository = config.repository;
+    const actions = el('div', 'ja-publish-actions');
+    const generated = el('textarea', 'ja-input ja-json-output');
+    generated.readOnly = true; generated.rows = 8; generated.spellcheck = false;
+    generated.setAttribute('aria-label', 'Generated content.json');
+    const editorLink = el('a', 'ja-button', 'Open GitHub editor');
+    editorLink.target = '_blank'; editorLink.rel = 'noopener noreferrer';
+    const destination = hint('');
+    const size = hint('');
+    const prepared = () => {
+      fits(config);
+      site.apply(config);
+      return site.getConfig();
+    };
+    function refreshExport() {
+      try {
+        const content = prepared();
+        generated.value = window.JammStorage.serializeContent(content);
+        size.textContent = `${(new Blob([generated.value]).size / 1024 / 1024).toFixed(2)} MB · Includes your text, notes, theme, photos and contacts.`;
+      } catch (error) {
+        generated.value = ''; size.textContent = error.message || 'The content could not be prepared.';
+      }
+      try {
+        editorLink.href = window.JammStorage.githubEditorURL(repository);
+        editorLink.removeAttribute('aria-disabled'); editorLink.removeAttribute('tabindex');
+        destination.textContent = `Editing ${repository.owner}/${repository.repo} · ${repository.branch || 'main'}/content.json`;
+      } catch (error) {
+        editorLink.removeAttribute('href'); editorLink.setAttribute('aria-disabled', 'true'); editorLink.tabIndex = -1;
+        destination.textContent = error.message || 'Check your repository settings below.';
+      }
+      return generated.value;
+    }
+    const copyButton = button('Copy for GitHub', async () => {
+      if (publishing || !validInputs()) return;
+      const text = refreshExport();
+      if (!text) { status('The content could not be prepared. Check the message above.', true); return; }
+      let copied = false;
+      try {
+        if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); copied = true; }
+      } catch (_) { /* Keep the same text available for manual copying. */ }
+      if (!copied) {
+        preview.open = true;
+        generated.focus(); generated.select(); generated.setSelectionRange(0, generated.value.length);
+        try { copied = document.execCommand('copy'); } catch (_) { /* The selected text can still be copied by the user. */ }
+      }
+      status(copied
+        ? 'Copied. Open the GitHub editor, replace the file’s contents, then choose Commit changes. Your live website has not changed yet.'
+        : 'Your changes are selected below. Press ⌘C on Mac or Ctrl+C on Windows, then paste them into the GitHub editor. You can also download content.json.');
+    }, 'ja-button ja-primary');
+    const download = button('Download content.json', () => {
+      if (publishing || !validInputs()) return;
+      try {
+        const content = prepared();
+        window.JammStorage.downloadContent(content);
+        refreshExport();
+        status('content.json downloaded. Upload it to your repository, replacing the existing content.json, then commit the change.');
+      } catch (error) { status(error.message || 'The content file could not be downloaded.', true); }
+    });
+    actions.append(copyButton, download, editorLink);
+    body.append(actions, destination);
+    const instructions = el('ol', 'ja-instructions ja-publish-steps');
+    instructions.append(
+      el('li', '', 'Finish editing your page, then choose Copy for GitHub.'),
+      el('li', '', 'Open the GitHub editor and sign in to the account that owns this repository.'),
+      el('li', '', 'Select all the text in content.json, paste your copied changes, then choose Commit changes. Your website updates when GitHub Pages finishes publishing.')
+    );
+    body.append(instructions, hint('You can also download content.json and upload it to the repository, replacing the existing file. New photo uploads and contact icons are included in the file.'));
+    const preview = el('details', 'ja-publish-details');
+    preview.append(el('summary', '', 'View generated content.json'), generated, size);
+    body.append(preview);
+    const settings = el('details', 'ja-publish-details');
+    settings.append(el('summary', '', 'Repository settings'));
+    const setRepository = key => value => { repository[key] = value.trim(); update(); refreshExport(); };
+    settings.append(field('GitHub account or organisation', input(repository.owner, setRepository('owner'), { placeholder: 'MikaLover-Art', maxLength: 39 })));
+    settings.append(field('Repository name', input(repository.repo, setRepository('repo'), { placeholder: 'mika', maxLength: 100 })));
+    settings.append(field('Branch', input(repository.branch, setRepository('branch'), { placeholder: 'main', maxLength: 200 }), 'Leave blank to use main in the GitHub editor link.'));
+    body.append(settings);
+    const advanced = el('details', 'ja-publish-details ja-publish-advanced');
+    advanced.append(el('summary', '', 'Advanced: publish with an access token'));
+    const tokenSteps = el('ol', 'ja-instructions');
     const first = el('li', '', 'Create a fine-grained personal access token in ');
     const link = el('a', '', 'GitHub settings'); link.href = 'https://github.com/settings/personal-access-tokens/new'; link.target = '_blank'; link.rel = 'noopener noreferrer'; first.append(link, document.createTextNode('.'));
-    instructions.append(first, el('li', '', 'Select only this portfolio repository and allow “Contents: Read and write”.'), el('li', '', 'Paste the token below, then publish. It stays in memory and is cleared when you leave this tab or exit the editor.'));
-    body.append(instructions);
+    tokenSteps.append(first, el('li', '', 'Select only this portfolio repository and allow “Contents: Read and write”.'), el('li', '', 'Paste the token below, then publish. It stays in memory and is cleared when you leave this tab or exit the editor.'));
+    advanced.append(tokenSteps);
     tokenInput = input('', () => {}, { type: 'password', placeholder: 'GitHub fine-grained access token' });
     tokenInput.autocomplete = 'off'; tokenInput.spellcheck = false; tokenInput.setAttribute('data-1p-ignore', ''); tokenInput.setAttribute('data-lpignore', 'true');
-    body.append(field('GitHub access token', tokenInput, 'Never included in drafts, backups or uploaded website content.'));
-    publishButton = button('Publish website', async () => {
-      if (publishing) return;
-      if (!validInputs()) return;
+    advanced.append(field('GitHub access token', tokenInput, 'Never included in drafts, backups or uploaded website content.'));
+    advanced.addEventListener('toggle', () => { if (!advanced.open && !publishing && tokenInput) tokenInput.value = ''; });
+    publishButton = button('Publish directly to GitHub', async () => {
+      if (publishing || !validInputs()) return;
       if (!repository.owner || !repository.repo || !tokenInput.value.trim()) { status('Enter the GitHub account, repository name and access token to publish.', true); return; }
       if (config.contacts.some(contact => contact.url && !safeURL(contact.url))) { status('A contact link is invalid. Use https://, http://, mailto: or tel:.', true); return; }
-      publishing = true; publishButton.disabled = true; publishButton.textContent = 'Publishing…';
-      const controls = [...body.querySelectorAll('input, select')]; controls.forEach(control => { control.disabled = true; });
+      publishing = true; publishButton.textContent = 'Publishing…';
+      const controls = [...body.querySelectorAll('input, select, textarea, button')].map(control => [control, control.disabled]);
+      controls.forEach(([control]) => { control.disabled = true; });
       try {
-        fits(config);
-        const result = await window.JammStorage.publish({ owner: repository.owner, repo: repository.repo, branch: repository.branch, token: tokenInput.value.trim(), config: clone(config), onProgress: message => status(String(message)) });
+        const content = prepared();
+        const result = await window.JammStorage.publish({ owner: repository.owner, repo: repository.repo, branch: repository.branch, token: tokenInput.value.trim(), config: content, onProgress: message => status(String(message)) });
         config = result && result.config ? clone(result.config) : config;
         site.apply(config); config = site.getConfig(); published = clone(config);
         const saved = await save(true);
@@ -423,11 +527,15 @@
       } catch (error) { status(`Publishing failed: ${error.message || 'Please check your connection and repository permissions.'}`, true); }
       finally {
         publishing = false; if (tokenInput) tokenInput.value = '';
-        controls.forEach(control => { control.disabled = false; });
-        publishButton.disabled = false; publishButton.textContent = 'Publish website';
+        controls.forEach(([control, disabled]) => { control.disabled = disabled; });
+        publishButton.textContent = 'Publish directly to GitHub';
+        repository = config.repository;
+        refreshExport();
       }
-    }, 'ja-button ja-primary ja-wide');
-    body.append(publishButton, hint('A browser draft stays on this device. A backup keeps a portable copy. Publishing updates the website for everyone.'));
+    }, 'ja-button ja-wide');
+    advanced.append(publishButton);
+    body.append(advanced);
+    refreshExport();
   }
   async function init() {
     if (!window.JammSite) return;
